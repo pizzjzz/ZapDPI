@@ -3,20 +3,67 @@ name: Build ZapDPI iOS
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: macos-latest
+    timeout-minutes: 60
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Select Xcode version
-        run: sudo xcode-select -switch /Applications/Xcode_15.app
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Diagnose Xcode installations
+        run: |
+          echo "=== Установленные Xcode ==="
+          ls -d /Applications/Xcode*.app 2>/dev/null || echo "Xcode не найден в /Applications/"
+          echo ""
+          echo "=== Текущий xcode-select ==="
+          xcode-select -p 2>/dev/null || echo "xcode-select не настроен"
+
+      - name: Select latest available Xcode
+        run: |
+          XCODE_PATH=$(ls -d /Applications/Xcode*.app | sort -V | tail -n 1)
+          if [ -z "$XCODE_PATH" ]; then
+            echo "❌ Xcode не найден в /Applications/"
+            exit 1
+          fi
+          echo "Выбран Xcode: $XCODE_PATH"
+          sudo xcode-select -switch "$XCODE_PATH"
+          xcodebuild -version
+
+      - name: Build Swift Package
+        run: |
+          swift build --target ZapDPI
+
       - name: Build archive
-        run: xcodebuild -scheme ZapDPI -configuration Release -sdk iphoneos archive -archivePath ./build/ZapDPI.xcarchive
+        run: |
+          xcodebuild \
+            -scheme ZapDPI \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath ./build/ZapDPI.xcarchive \
+            archive
+
       - name: Export IPA
-        run: xcodebuild -exportArchive -archivePath ./build/ZapDPI.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath ./build/ipa
-      - name: Upload artifact
+        run: |
+          xcodebuild \
+            -exportArchive \
+            -archivePath ./build/ZapDPI.xcarchive \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath ./build/ipa
+
+      - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
           name: ZapDPI-ipa
           path: ./build/ipa/
+          retention-days: 7
+
+      - name: Show build results
+        run: |
+          echo "=== IPA файлы ==="
+          ls -lh ./build/ipa/ 2>/dev/null || echo "IPA не найдены"
