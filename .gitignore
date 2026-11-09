@@ -1,0 +1,51 @@
+# Xcode
+#
+# Git ignores for Xcode projects
+# https://github.com/github/gitignore/blob/main/Swift.gitignore
+
+# Build artifacts
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/xcschemes/*.xcscheme
+*.xcworkspace/
+*.xcuserstate
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+# Derived data
+DerivedData/
+
+# Build
+build/
+
+# Swift Package Manager
+.build/
+Package.resolved
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/Build/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# DS_Store
+.DS_Store
+**/.DS_Store
+
+# Temp
+*.tmp
+*.temp
+
+# Logs
+*.log
+
+# Xcode 13+
+*.xccheckout
