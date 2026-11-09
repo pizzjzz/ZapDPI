@@ -1,0 +1,22 @@
+name: Build ZapDPI iOS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode version
+        run: sudo xcode-select -switch /Applications/Xcode_15.app
+      - name: Build archive
+        run: xcodebuild -scheme ZapDPI -configuration Release -sdk iphoneos archive -archivePath ./build/ZapDPI.xcarchive
+      - name: Export IPA
+        run: xcodebuild -exportArchive -archivePath ./build/ZapDPI.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath ./build/ipa
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZapDPI-ipa
+          path: ./build/ipa/
