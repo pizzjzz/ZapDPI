@@ -23,6 +23,13 @@ jobs:
           echo ""
           echo "=== Текущий xcode-select ==="
           xcode-select -p 2>/dev/null || echo "xcode-select не настроен"
+          echo ""
+          echo "=== Версии xcodebuild ==="
+          for xcode in /Applications/Xcode*.app; do
+            [ -d "$xcode" ] || continue
+            version=$("$xcode/Contents/Developer/usr/bin/xcodebuild" -version 2>/dev/null | head -1)
+            echo "$xcode -> $version"
+          done
 
       - name: Select latest available Xcode
         run: |
