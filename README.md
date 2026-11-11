@@ -22,105 +22,130 @@
 2. **LiveContainer** — нет JIT-компиляции по умолчанию (может потребоваться активация через AltStore/SideStore). Жёсткие лимиты ОЗУ (обычно 15–50 МБ) — конфигурация не должна содержать миллионные списки заблокированных IP.
 3. **Локальный обход DPI** работает только внутри TCP/UDP-сессий, которые приложение может перехватить на уровне локального туннеля (L3/L7). Не все сырые пакеты ядра iOS можно модифицировать.
 
-## 🏗️ Структура проекта
+## 📁 Структура репозитория
 
 ```
 ZapDPI/
-├── ZapDPI/
-│   ├── ZapDPIApp.swift          # Точка входа (@main)
-│   ├── ContentView.swift        # Корневой TabView + Liquid Glass таб-бар
-│   ├── LiquidGlassTabBar.swift  # Плавающий стеклянный таб-бар (iOS 18)
-│   ├── HomeView.swift           # Вкладка «Главная» (VPN + монитор трафика)
-│   ├── ConfigView.swift         # Вкладка «Config» (JSON редактор + DPI настройки)
-│   ├── SettingsView.swift       # Вкладка «Настройки» (Form + маршруты + DNS)
-│   ├── Models.swift             # Модели данных (AppConfig, TunnelStatus, TrafficStats, и т.д.)
-│   ├── VPNManager.swift         # Управление VPN (с fallback на In-App режим)
-│   ├── TrafficMonitor.swift     # Мониторинг трафика в реальном времени
-│   ├── ConfigManager.swift      # Сохранение/загрузка/импорт/экспорт конфигов
-│   ├── Info.plist               # Конфигурация приложения
-│   └── ZapDPI.entitlements      # Права доступа (entitlements)
+├── .github/
+│   └── workflows/
+│       └── build.yml          # GitHub Actions workflow для сборки .ipa
+├── ExportOptions.plist        # Настройки экспорта .ipa (метод подписи)
 ├── .gitignore
-└── README.md
+├── README.md
+└── ZapDPI/
+    ├── ZapDPIApp.swift        # Точка входа (@main)
+    ├── ContentView.swift      # Корневой TabView + Liquid Glass таб-бар
+    ├── LiquidGlassTabBar.swift  # Плавающий стеклянный таб-бар (iOS 18)
+    ├── HomeView.swift         # Вкладка «Главная» (VPN + монитор трафика)
+    ├── ConfigView.swift       # Вкладка «Config» (JSON редактор + DPI настройки)
+    ├── SettingsView.swift     # Вкладка «Настройки» (Form + маршруты + DNS)
+    ├── Models.swift           # Модели данных
+    ├── VPNManager.swift       # Управление VPN (с fallback на In-App режим)
+    ├── TrafficMonitor.swift   # Мониторинг трафика в реальном времени
+    ├── ConfigManager.swift    # Сохранение/загрузка/импорт/экспорт конфигов
+    ├── Info.plist             # Конфигурация приложения
+    └── ZapDPI.entitlements    # Права доступа (entitlements)
 ```
 
-## 🚀 Сборка .ipa
+> ⚠️ **Важно:** Для компиляции `.ipa` необходим полноценный Xcode-проект (`.xcodeproj`). Репозиторий содержит исходные `.swift` файлы — `.xcodeproj` создаётся в Xcode вручную (см. инструкцию ниже).
 
-### macOS (нативный способ)
+---
 
-Требуется **Xcode** (скачать из Mac App Store).
+## 🚀 Сборка .ipa (обязательно на macOS)
 
-1. Установите Xcode.
-2. Откройте терминал и перейдите в папку проекта:
-   ```bash
-   cd /путь/к/ZapDPI
-   ```
-3. Создайте Xcode-проект (если ещё не создан):
-   ```bash
-   # В Xcode: File → New → Project → App → SwiftUI → Next
-   # Скопируйте файлы из папки ZapDPI/ в проект
-   ```
-4. Откройте `ZapDPI.xcodeproj` в Xcode.
-5. Выберите команду **Product → Archive** (или в терминале):
-   ```bash
-   xcodebuild -scheme ZapDPI -configuration Release -sdk iphoneos archive -archivePath ./build/ZapDPI.xcarchive
-   ```
-6. Экспортируйте `.ipa`:
-   ```bash
-   xcodebuild -exportArchive -archivePath ./build/ZapDPI.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath ./build/ipa
-   ```
-   Где `ExportOptions.plist` содержит метод экспорта (`ad-hoc`, `development` или `enterprise`).
+### Шаг 1: Создайте Xcode-проект
 
-7. Готовый `.ipa` будет в папке `./build/ipa/`.
+Требуется **macOS** с установленным **Xcode** (Mac App Store).
 
-### Windows (требуется macOS)
+1. Откройте Xcode
+2. `File → New → Project`
+3. Выберите **App** → `Next`
+4. Заполните:
+   - **Product Name:** ZapDPI
+   - **Team:** ваша Apple ID / Team (или добавьте позже)
+   - **Bundle Identifier:** `com.zapdpi.ios`
+   - **Interface:** SwiftUI
+   - **Language:** Swift
+5. Сохраните проект в папку `ZapDPI/` (рядом с этим README)
 
-**Нельзя скомпилировать .ipa нативно в Windows**, так как Xcode доступен только на macOS. Варианты:
+### Шаг 2: Добавьте исходные файлы в проект
 
-1. **Аренда Mac в облаке** (рекомендуется):
-   - [MacStadium](https://macstadium.com/)
-   - [MacInCloud](https://www.macincloud.com/)
-   - [AWS EC2 Mac](https://aws.amazon.com/ec2/mac/)
-   
-   Подключитесь по RDP/VNC, установите Xcode и соберите проект по инструкции для macOS выше.
+Перетащите в Xcode все файлы из папки `ZapDPI/`:
+- `ZapDPIApp.swift`
+- `ContentView.swift`
+- `LiquidGlassTabBar.swift`
+- `HomeView.swift`
+- `ConfigView.swift`
+- `SettingsView.swift`
+- `Models.swift`
+- `VPNManager.swift`
+- `TrafficMonitor.swift`
+- `ConfigManager.swift`
+- `Info.plist`
+- `ZapDPI.entitlements`
 
-2. **GitHub Actions (macOS runner)** — автоматизация сборки:
-   Создайте файл `.github/workflows/build.yml`:
-   ```yaml
-   name: Build ZapDPI iOS
-   
-   on:
-     push:
-       branches: [main]
-   
-   jobs:
-     build:
-       runs-on: macos-latest
-       steps:
-         - uses: actions/checkout@v4
-         - name: Select Xcode version
-           run: sudo xcode-select -switch /Applications/Xcode_15.app
-         - name: Build archive
-           run: xcodebuild -scheme ZapDPI -configuration Release -sdk iphoneos archive -archivePath ./build/ZapDPI.xcarchive
-         - name: Export IPA
-           run: xcodebuild -exportArchive -archivePath ./build/ZapDPI.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath ./build/ipa
-         - name: Upload artifact
-           uses: actions/upload-artifact@v4
-           with:
-             name: ZapDPI-ipa
-             path: ./build/ipa/
-   ```
+### Шаг 3: Настройте подпись (Signing & Capabilities)
 
-3. **Виртуальная машина macOS на Windows** (VMware Workstation, VirtualBox):
-   - Требуется образ macOS и соблюдение лицензионного соглашения Apple.
-   - Установите Xcode внутри виртуальной машины и соберите проект стандартным способом.
+1. Выберите проект в навигаторе Xcode → цель **ZapDPI**
+2. Вкладка **Signing & Capabilities**
+3. Поставьте галочку **Automatically manage signing**
+4. Выберите ваш Apple ID / Team
+5. Bundle Identifier: `com.zapdpi.ios`
 
-### Linux (требуется macOS)
+### Шаг 4: Закоммитьте .xcodeproj
 
-**Нельзя скомпилировать .ipa нативно в Linux**, так как Xcode и инструменты компиляции для iOS доступны только на macOS. Варианты те же, что и для Windows:
+```bash
+git add ZapDPI.xcodeproj/
+git commit -m "Add Xcode project"
+git push origin main
+```
 
-1. **Аренда Mac в облаке** (MacStadium, MacInCloud, AWS EC2 Mac).
-2. **GitHub Actions с macOS-runner** (пример выше).
-3. **Docker с macOS** — не официально поддерживается Apple, возможно нарушение лицензии, не рекомендуется для продакшена.
+### Шаг 5: Соберите .ipa
+
+**В Xcode:**
+1. `Product → Archive`
+2. В окне Organizer нажмите **Distribute App**
+3. Выберите метод: `Ad Hoc` / `Development` / `App Store`
+4. Экспортируйте `.ipa`
+
+**Или через терминал (macOS):**
+```bash
+cd /путь/к/ZapDPI
+
+xcodebuild -scheme ZapDPI \
+  -configuration Release \
+  -sdk iphoneos \
+  -archivePath ./build/ZapDPI.xcarchive \
+  archive
+
+xcodebuild -exportArchive \
+  -archivePath ./build/ZapDPI.xcarchive \
+  -exportOptionsPlist ExportOptions.plist \
+  -exportPath ./build/ipa
+```
+
+Готовый `.ipa` будет в папке `./build/ipa/`.
+
+---
+
+## 🔄 GitHub Actions (macOS runner)
+
+Сборка через GitHub Actions возможна только на **macOS-раннере** (`macos-latest`). Xcode не работает на Windows и Linux нативно.
+
+Файл `.github/workflows/build.yml` уже настроен:
+- Автоматически выбирает установленную версию Xcode
+- Собирает архив через `xcodebuild archive`
+- Экспортирует `.ipa`
+- Загружает артефакт в GitHub Actions
+
+### Требования для работы Actions:
+1. В репозитории должен быть `.xcodeproj` (создан в Xcode, см. выше)
+2. Файл `ExportOptions.plist` с настройками подписи
+3. Секреты GitHub (если нужна автоматическая подпись):
+   - `APPLE_ID` — ваш Apple ID
+   - `APPLE_ID_PASSWORD` — пароль от Apple ID (или App-Specific Password)
+
+---
 
 ## 📦 Дистрибуция
 
@@ -135,7 +160,7 @@ ZapDPI/
 
 - Для **бесплатной аккаунта Apple** (Apple ID) доступна только локальная подпись на 7 дней.
 - Для полноценного `NetworkExtension` (системный VPN) требуется **Apple Developer Program** ($99/год) и соответствующий профиль провижининга.
-- В файле `ZapDPI.entitlements` закомментированы ключи `com.apple.developer.networking.networkextension` — раскомментируйте их при наличии платной подписки.
+- В файле `ZapDPI.entitlements` ключи `com.apple.developer.networking.networkextension` закомментированы — раскомментируйте их при наличии платной подписки.
 
 ## 🛠️ Стек технологий
 
@@ -147,7 +172,7 @@ ZapDPI/
 
 ## 📄 Лицензия
 
-MIT License. См. файл `LICENSE` (при создании репозитория).
+MIT License.
 
 ---
 
