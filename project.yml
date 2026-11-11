@@ -4,15 +4,6 @@ options:
   deploymentTarget:
     iOS: 17.0
   createIntermediateGroups: true
-  xcodeVersion: "15.0"
-
-settings:
-  base:
-    INFOPLIST_FILE: ZapDPI/Info.plist
-    CODE_SIGN_ENTITLEMENTS: ZapDPI/ZapDPI.entitlements
-    SWIFT_VERSION: "5.9"
-    IPHONEOS_DEPLOYMENT_TARGET: 17.0
-    CODE_SIGN_STYLE: Automatic
 
 targets:
   ZapDPI:
@@ -21,7 +12,11 @@ targets:
     sources:
       - path: ZapDPI
     settings:
-      PRODUCT_NAME: ZapDPI
+      INFOPLIST_FILE: ZapDPI/Info.plist
+      CODE_SIGN_ENTITLEMENTS: ZapDPI/ZapDPI.entitlements
+      SWIFT_VERSION: "5.9"
+      IPHONEOS_DEPLOYMENT_TARGET: 17.0
+      CODE_SIGN_STYLE: Automatic
 
 schemes:
   ZapDPI:

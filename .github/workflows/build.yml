@@ -16,34 +16,25 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: List repository root
+      - name: Verify project.yml exists
         run: |
-          echo "=== Files in repository root ==="
-          ls -la
+          if [ ! -f project.yml ]; then
+            echo "❌ project.yml not found!"
+            exit 1
+          fi
+          echo "✅ project.yml found"
 
       - name: Install XcodeGen
         run: |
           brew install xcodegen
 
-      - name: Verify project.yml exists
+      - name: Show project.yml contents
         run: |
-          if [ ! -f project.yml ]; then
-            echo "❌ project.yml not found in repository root!"
-            exit 1
-          fi
-          echo "✅ project.yml found"
+          cat project.yml
 
       - name: Generate Xcode project
         run: |
           xcodegen
-
-      - name: Diagnose Xcode installations
-        run: |
-          echo "=== Установленные Xcode ==="
-          ls -d /Applications/Xcode*.app 2>/dev/null || echo "Xcode не найден в /Applications/"
-          echo ""
-          echo "=== Текущий xcode-select ==="
-          xcode-select -p 2>/dev/null || echo "xcode-select не настроен"
 
       - name: Select latest available Xcode
         run: |
@@ -79,8 +70,3 @@ jobs:
           name: ZapDPI-ipa
           path: ./build/ipa/
           retention-days: 7
-
-      - name: Show build results
-        run: |
-          echo "=== IPA файлы ==="
-          ls -lh ./build/ipa/ 2>/dev/null || echo "IPA не найдены"
