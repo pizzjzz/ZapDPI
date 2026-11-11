@@ -16,6 +16,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install XcodeGen
+        run: |
+          brew install xcodegen
+
+      - name: Generate Xcode project
+        run: |
+          xcodegen
+
       - name: Diagnose Xcode installations
         run: |
           echo "=== Установленные Xcode ==="
@@ -23,13 +31,6 @@ jobs:
           echo ""
           echo "=== Текущий xcode-select ==="
           xcode-select -p 2>/dev/null || echo "xcode-select не настроен"
-          echo ""
-          echo "=== Версии xcodebuild ==="
-          for xcode in /Applications/Xcode*.app; do
-            [ -d "$xcode" ] || continue
-            version=$("$xcode/Contents/Developer/usr/bin/xcodebuild" -version 2>/dev/null | head -1)
-            echo "$xcode -> $version"
-          done
 
       - name: Select latest available Xcode
         run: |
@@ -41,10 +42,6 @@ jobs:
           echo "Выбран Xcode: $XCODE_PATH"
           sudo xcode-select -switch "$XCODE_PATH"
           xcodebuild -version
-
-      - name: Build Swift Package
-        run: |
-          swift build --target ZapDPI
 
       - name: Build archive
         run: |
