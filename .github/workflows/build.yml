@@ -16,9 +16,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: List repository root
+        run: |
+          echo "=== Files in repository root ==="
+          ls -la
+
       - name: Install XcodeGen
         run: |
           brew install xcodegen
+
+      - name: Verify project.yml exists
+        run: |
+          if [ ! -f project.yml ]; then
+            echo "❌ project.yml not found in repository root!"
+            exit 1
+          fi
+          echo "✅ project.yml found"
 
       - name: Generate Xcode project
         run: |
