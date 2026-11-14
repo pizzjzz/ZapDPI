@@ -2,6 +2,10 @@
 
 **ZapDPI** — приложение для iPhone, которое позволяет обходить цензуру и блокировки сайтов и приложений, установленные регуляторами по технологии DPI (Deep Packet Inspection). Приложение использует локальное ядро **sing-box** и не требует разворачивания собственного VPS.
 
+## ⚠️ Важное обновление: GitHub CI/CD приостановлен
+
+Сборка `.ipa` через GitHub Actions приостановлена на неопределенный срок в связи с техническими ограничениями платформы iOS и невозможностью нативной компиляции на Windows/Linux. Xcode и инструменты инструментария Apple доступны только на macOS. Работа над проектом продолжается локально, а инструкции по сборке обновлены ниже.
+
 ## 🎨 Дизайн
 
 Интерфейс построен на **SwiftUI** в стиле **Liquid Glass** — плавающий стеклянный таб-бар в стиле iOS 18, полупрозрачные карточки, градиентные кнопки и мягкие тени.
@@ -19,25 +23,25 @@
 Из-за закрытости iOS и правил безопасности Apple:
 
 1. **Бесплатная подпись (SideStore / AltStore / Sideloadly / 7 дней)** — системный фреймворк `NetworkExtension` (`NEPacketTunnelProvider`) **недоступен**. Приложение автоматически переходит в **внутрипроцессный режим (In-App Tun/Proxy)** без создания полноценного системного VPN-расширения.
-2. **LiveContainer** — нет JIT-компиляции по умолчанию (может потребоваться активация через AltStore/SideStore). Жёсткие лимиты ОЗУ (обычно 15–50 МБ) — конфигурация не должна содержать миллионные списки заблокированных IP.
+2. **LiveContainer** — нет JIT-компиляции по умолчанию (может потребоваться активация через AltStore/SideStore). Жёсткие лимиты ОЗУ (обычно 15–50 МБ) — конфигурация не должна содержать миллионных списков заблокированных IP.
 3. **Локальный обход DPI** работает только внутри TCP/UDP-сессий, которые приложение может перехватить на уровне локального туннеля (L3/L7). Не все сырые пакеты ядра iOS можно модифицировать.
 
 ## 📁 Структура репозитория
 
 ```
 ZapDPI/
-├── .github/
+├ .github/
 │   └── workflows/
-│       └── build.yml          # GitHub Actions workflow для сборки .ipa
-├── ExportOptions.plist        # Настройки экспорта .ipa (метод подписи)
-├── .gitignore
-├── README.md
-└── ZapDPI/
+│       └── build.yml          # GitHub Actions workflow (пaused)
+├ ExportOptions.plist        # Настройки экспорта .ipa (метод подписи)
+├ .gitignore
+├ README.md
+└ ZapDPI/
     ├── ZapDPIApp.swift        # Точка входа (@main)
     ├── ContentView.swift      # Корневой TabView + Liquid Glass таб-бар
     ├── LiquidGlassTabBar.swift  # Плавающий стеклянный таб-бар (iOS 18)
     ├── HomeView.swift         # Вкладка «Главная» (VPN + монитор трафика)
-    ├── ConfigView.swift       # Вкладка «Config» (JSON редактор + DPI настройки)
+    ├── ConfigView.swift       # Вкладка «Config» (JSON редактор + DPI настройка)
     ├── SettingsView.swift     # Вкладка «Настройки» (Form + маршруты + DNS)
     ├── Models.swift           # Модели данных
     ├── VPNManager.swift       # Управление VPN (с fallback на In-App режим)
@@ -47,114 +51,87 @@ ZapDPI/
     └── ZapDPI.entitlements    # Права доступа (entitlements)
 ```
 
-> ⚠️ **Важно:** Для компиляции `.ipa` необходим полноценный Xcode-проект (`.xcodeproj`). Репозиторий содержит исходные `.swift` файлы — `.xcodeproj` создаётся в Xcode вручную (см. инструкцию ниже).
+## 🛠️ Альтернативная сборка через xtool
 
----
+В связи с приостановкой GitHub CI/CD, проект можно компилировать с помощью **xtool** — кроссплатформенного инструмента для работы с Xcode-проектами без прямой необходимости в macOS для финальной сборки .ipa.
 
-## 🚀 Сборка .ipa (обязательно на macOS)
+### Что такое xtool?
 
-### Шаг 1: Создайте Xcode-проект
+[xtool](https://github.com/xtool-org/xtool) — это набор утилит для работы с iOS-приложениями, позволяющий генерировать и манипулировать Xcode-проектами (.xcodeproj/.xcworkspace) на разных платформах. В контексте нашего проекта он может помочь сгенерировать структуру проекта, которой затем можно будет управлять для сборки.
 
-Требуется **macOS** с установленным **Xcode** (Mac App Store).
+### Инструкция по компиляции через xtool
 
-1. Откройте Xcode
-2. `File → New → Project`
-3. Выберите **App** → `Next`
-4. Заполните:
-   - **Product Name:** ZapDPI
-   - **Team:** ваша Apple ID / Team (или добавьте позже)
-   - **Bundle Identifier:** `com.zapdpi.ios`
-   - **Interface:** SwiftUI
-   - **Language:** Swift
-5. Сохраните проект в папку `ZapDPI/` (рядом с этим README)
+**Требования:**
+- Windows или Linux система
+- Установленный Python 3.8+
+- Доступ к интернету для загрузки зависимостей
 
-### Шаг 2: Добавьте исходные файлы в проект
+### Пошаговая инструкция:
 
-Перетащите в Xcode все файлы из папки `ZapDPI/`:
-- `ZapDPIApp.swift`
-- `ContentView.swift`
-- `LiquidGlassTabBar.swift`
-- `HomeView.swift`
-- `ConfigView.swift`
-- `SettingsView.swift`
-- `Models.swift`
-- `VPNManager.swift`
-- `TrafficMonitor.swift`
-- `ConfigManager.swift`
-- `Info.plist`
-- `ZapDPI.entitlements`
-
-### Шаг 3: Настройте подпись (Signing & Capabilities)
-
-1. Выберите проект в навигаторе Xcode → цель **ZapDPI**
-2. Вкладка **Signing & Capabilities**
-3. Поставьте галочку **Automatically manage signing**
-4. Выберите ваш Apple ID / Team
-5. Bundle Identifier: `com.zapdpi.ios`
-
-### Шаг 4: Закоммитьте .xcodeproj
+**1. Установка xtool:**
 
 ```bash
-git add ZapDPI.xcodeproj/
-git commit -m "Add Xcode project"
-git push origin main
+# Клонируем репозиторий xtool
+git clone https://github.com/xtool-org/xtool.git
+
+# Переходим в директорию
+cd xtool
+
+# Устанавливаем зависимости
+pip install -r requirements.txt
 ```
 
-### Шаг 5: Соберите .ipa
+**2. Подготовка проекта ZapDPI:**
 
-**В Xcode:**
-1. `Product → Archive`
-2. В окне Organizer нажмите **Distribute App**
-3. Выберите метод: `Ad Hoc` / `Development` / `App Store`
-4. Экспортируйте `.ipa`
-
-**Или через терминал (macOS):**
 ```bash
-cd /путь/к/ZapDPI
-
-xcodebuild -scheme ZapDPI \
-  -configuration Release \
-  -sdk iphoneos \
-  -archivePath ./build/ZapDPI.xcarchive \
-  archive
-
-xcodebuild -exportArchive \
-  -archivePath ./build/ZapDPI.xcarchive \
-  -exportOptionsPlist ExportOptions.plist \
-  -exportPath ./build/ipa
+# Клонируем или копируем наш проект
+git clone https://github.com/your-username/ZapDPI.git
+cd ZapDPI
 ```
 
-Готовый `.ipa` будет в папке `./build/ipa/`.
+**3. Генерация Xcode-project с помощью xtool:**
 
----
+```bash
+# Запускаем генерацию проекта
+xtool generate \
+  --name ZapDPI \
+  --iOSVersion 17.0 \
+  --output ./build
+```
 
-## 🔄 GitHub Actions (macOS runner)
+Это создаст структуру `./build/ZapDPI.xcodeproj`, которую можно открыть в Xcode на Mac для финальной подписи и архивации.
 
-Сборка через GitHub Actions возможна только на **macOS-раннере** (`macos-latest`). Xcode не работает на Windows и Linux нативно.
+**4. Дальнейшая сборка:**
 
-Файл `.github/workflows/build.yml` уже настроен:
-- Автоматически выбирает установленную версию Xcode
-- Собирает архив через `xcodebuild archive`
-- Экспортирует `.ipa`
-- Загружает артефакт в GitHub Actions
+После генерации проекта xtool'ом:
 
-### Требования для работы Actions:
-1. В репозитории должен быть `.xcodeproj` (создан в Xcode, см. выше)
-2. Файл `ExportOptions.plist` с настройками подписи
-3. Секреты GitHub (если нужна автоматическая подпись):
-   - `APPLE_ID` — ваш Apple ID
-   - `APPLE_ID_PASSWORD` — пароль от Apple ID (или App-Specific Password)
+1. Откройте `./build/ZapDPI.xcodeproj` в Xcode на macOS
+2. Настройте подпись (Signing & Capabilities) под ваш Apple ID
+3. Выполните `Product → Archive`
+4. Экспортируйте `.ipa` через интерфейс Xcode
 
----
+**5. Установка полученного .ipa:**
 
-## 📦 Дистрибуция
+- Через SideStore / AltStore на вашем iPhone
+- Через LiveContainer
+- Через iLoader с ПК
 
-Приложение можно установить следующими способами:
+### Важные заметки:
 
-- **LiveContainer**
-- **SideStore / AltStore / Sideloadly** (бесплатная подпись, 7 дней)
-- **iLoader** (через ПК)
-- **.ipa файл** — через указанные выше инструменты
+- xtool генерирует структуру проекта, но **финальная подпись и архивация все равно требует Xcode на macOS**
+- Инструмент упрощает создание проекта, но не обходит ограничения Apple по NetworkExtension при бесплатной подписи
+- Для бесплатной подписи Apple рассматривайте режим In-App Tun/Proxy (см. секцию ⚠️ Важные технические ограничения iOS)
+
+## ⚠️ GitHub CI/CD приостановлен
+
+Сборка через GitHub Actions приостановлена до дальнейних уточнений. Причины:
+- Отсутствие macOS-раннеров в окружении разработчика
+- Несовместимость Xcode с Windows/Linux
+- Технические ограничения XcodeGen для автоматической генерации корректного проекта
+
+Работа продолжается путем локальной настройки и использования альтернативных методов сборки, описанных выше.
+
+## ---
 
 ## 🔐 Подпись и провижининг
 
