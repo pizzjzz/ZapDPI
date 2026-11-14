@@ -1,0 +1,28 @@
+{
+  "project_name": "ZapDPI",
+  "version": "1.0.0",
+  "swift_version": "5.9",
+  "targets": [
+    {
+      "name": "ZapDPI",
+      "type": "application",
+      "sources": ["ZapDPI/*.swift"],
+      "resources": [],
+      "entitlements": "ZapDPI/ZapDPI.entitlements",
+      "info_plist": "ZapDPI/Info.plist",
+      "settings": {
+        "SWIFT_VERSION": "5.9",
+        "IPHONEOS_DEPLOYMENT_TARGET": "17.0",
+        "CODE_SIGN_STYLE": "Automatic",
+        "ENABLE_BITCODE": "NO"
+      }
+    }
+  ],
+  "schemes": [
+    {
+      "name": "ZapDPI",
+      "build_configuration": "Release",
+      "archive_configuration": "Release"
+    }
+  ]
+}

@@ -11,18 +11,32 @@ jobs:
   build:
     runs-on: macos-latest
     timeout-minutes: 60
-    # Приостановка CI/CD из-за технических ограничений Xcode на Windows/Linux
-    # сбора .ipa без доступа к macOS с Xcode.
-    # Инструкция по сборке через xtool — в README.md
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Show status
+      - name: Show CI/CD status
         run: |
-          echo "=== GitHub CI/CD for ZapDPI ==="
+          echo "=== GitHub Actions for ZapDPI ==="
           echo "Статус: Приостановлен на неопределенный срок"
-          echo "Причины: Отсутствие macOS с Xcode для нативной сборки .ipa"
-          echo "Рекомендуемая альтернатива: Использовать инструкцию в README.md по сборке через xtool"
-          echo "или аренду Mac в облаке (MacStadium, MacInCloud, AWS EC2 Mac) для сборки через Xcode."
+          echo ""
+          echo "Причины приостановки:"
+          echo "1. Xcode не работает на Windows/Linux"
+          echo "2. NetworkExtension недоступен при бесплатной подписи"
+          echo "3. Ограничения Apple по нативной сборке .ipa"
+          echo ""
+          echo "Решение: Использовать xtool для генерации проекта"
+          echo " (инструкция в README.md)"
+          echo ""
+          echo "Альтернативные варианты:"
+          echo "• Аренда Mac в облаке (MacStadium, MacInCloud, AWS EC2 Mac)"
+          echo "• Ручная сборка в Xcode на macOS"
+
+      - name: Verify project files
+        run: |
+          echo "=== Проверка ключевых файлов ==="
+          ls -la project.yml
+          ls -la xtool_config.json
+          ls -la ZapDPI/Info.plist
+          ls -la ZapDPI/ZapDPI.entitlements
