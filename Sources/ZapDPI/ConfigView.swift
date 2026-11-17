@@ -6,14 +6,12 @@ struct ConfigView: View {
 
     @State private var editJSON: String = ""
     @State private var isSaving = false
-    @State private var showDPISettings = false
     @State private var showSaveConfirmation = false
     @State private var configName: String = ""
 
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Заголовок
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Конфигурация ядра")
                         .font(.largeTitle.weight(.bold))
@@ -27,7 +25,6 @@ struct ConfigView: View {
                 .padding(.top, 8)
                 .padding(.horizontal, 20)
 
-                // Редактор JSON
                 VStack(alignment: .leading, spacing: 8) {
                     Text("JSON конфиг")
                         .font(.caption.weight(.semibold))
@@ -45,15 +42,12 @@ struct ConfigView: View {
                                         .stroke(Color.white.opacity(0.4), lineWidth: 1)
                                 )
                         )
-                        .textSelection(.enabled)
                         .autocorrectionDisabled()
-                        .autocapitalization(.none)
-                        .disableAutocorrection(true)
+                        .textInputAutocapitalization(.never)
                         .frame(minHeight: 260)
                 }
                 .padding(.horizontal, 20)
 
-                // Настройки обхода DPI
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Обход DPI")
                         .font(.headline.weight(.semibold))
@@ -63,7 +57,7 @@ struct ConfigView: View {
                         get: { configManager.currentConfig.dpiBypassMode },
                         set: { configManager.currentConfig.dpiBypassMode = $0 }
                     )) {
-                        ForEach(DPIIntelligenceMode.allCases, id: \.self) { mode in
+                        ForEach(DPIIntelligenceMode.allCases) { mode in
                             Text(mode.displayName).tag(mode)
                         }
                     }
@@ -76,7 +70,6 @@ struct ConfigView: View {
                         .padding(.horizontal, 20)
                 }
 
-                // Кнопка "Сохранить и применить"
                 Button {
                     saveAndApply()
                 } label: {
@@ -121,43 +114,26 @@ struct ConfigView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
 
-                // Быстрые действия с конфигами
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Управление конфигами")
                         .font(.headline.weight(.semibold))
                         .padding(.horizontal, 20)
 
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                        ConfigActionButton(
-                            title: "Новый конфиг",
-                            icon: "doc.badge.plus",
-                            color: .blue
-                        ) {
+                        ConfigActionButton(title: "Новый конфиг", icon: "doc.badge.plus", color: .blue) {
                             configName = ""
                             showSaveConfirmation = true
                         }
 
-                        ConfigActionButton(
-                            title: "Импортировать",
-                            icon: "arrow.down.doc",
-                            color: .green
-                        ) {
+                        ConfigActionButton(title: "Импортировать", icon: "arrow.down.doc", color: .green) {
                             // Заглушка импорта
                         }
 
-                        ConfigActionButton(
-                            title: "Экспортировать",
-                            icon: "square.and.arrow.up",
-                            color: .orange
-                        ) {
+                        ConfigActionButton(title: "Экспортировать", icon: "square.and.arrow.up", color: .orange) {
                             // Заглушка экспорта
                         }
 
-                        ConfigActionButton(
-                            title: "Сброс к дефолту",
-                            icon: "arrow.counterclockwise",
-                            color: .red
-                        ) {
+                        ConfigActionButton(title: "Сброс к дефолту", icon: "arrow.counterclockwise", color: .red) {
                             resetToDefault()
                         }
                     }
@@ -174,35 +150,25 @@ struct ConfigView: View {
         .alert("Сохранить конфиг", isPresented: $showSaveConfirmation) {
             TextField("Название конфига", text: $configName)
             Button("Отмена", role: .cancel) {}
-            Button("Сохранить") {
-                saveConfigAs()
-            }
+            Button("Сохранить") { saveConfigAs() }
         } message: {
             Text("Введите название для новой конфигурации")
         }
     }
 
     private func saveAndApply() {
-        // Обновляем rawJSON из редактора
         configManager.currentConfig.rawJSON = editJSON
-
         isSaving = true
 
-        // Применяем конфиг к ядру (с задержкой для визуального эффекта)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
             vpnManager.applyConfig(configManager.currentConfig)
             isSaving = false
         }
     }
 
     private func saveConfigAs() {
-        guard !configName.isEmpty else { return }
-        do {
-            try configManager.saveCurrentConfig(name: configName)
-            configName = ""
-        } catch {
-            print("❌ Ошибка сохранения конфига: \(error)")
-        }
+        configManager.saveCurrentConfig(name: configName)
+        configName = ""
     }
 
     private func resetToDefault() {
@@ -211,7 +177,6 @@ struct ConfigView: View {
     }
 }
 
-/// Кнопка быстрого действия в сетке
 private struct ConfigActionButton: View {
     let title: String
     let icon: String

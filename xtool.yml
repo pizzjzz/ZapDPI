@@ -1,0 +1,5 @@
+version: 1
+bundleID: com.zapdpi.ios
+product: ZapDPI
+infoPath: Support/Info.plist
+entitlementsPath: Support/ZapDPI.entitlements

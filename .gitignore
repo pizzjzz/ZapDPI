@@ -49,3 +49,10 @@ fastlane/test_output
 
 # Xcode 13+
 *.xccheckout
+
+# xtool
+xtool/
+.bsp/
+.swiftpm/
+*.ipa
+*.app

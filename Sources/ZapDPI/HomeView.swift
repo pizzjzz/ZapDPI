@@ -3,6 +3,7 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject var vpnManager: VPNManager
     @EnvironmentObject var trafficMonitor: TrafficMonitor
+    @EnvironmentObject var configManager: ConfigManager
 
     var body: some View {
         ZStack {
@@ -10,27 +11,21 @@ struct HomeView: View {
 
             ScrollView {
                 VStack(spacing: 24) {
-                    // Заголовок приложения
                     VStack(spacing: 6) {
                         Text("ZapDPI")
                             .font(.system(size: 36, weight: .bold, design: .rounded))
                             .foregroundStyle(.primary)
-
                         Text("Обход DPI и защита трафика")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
                     .padding(.top, 16)
 
-                    // Статус подписи и режим VPN
                     signingInfoCard
-
-                    // Монитор трафика
                     trafficMonitorCard
 
                     Spacer(minLength: 20)
 
-                    // Кнопка VPN
                     vpnButton
                         .padding(.bottom, 30)
                 }
@@ -39,15 +34,16 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Карточка информации о подписи / режиме
-
     private var signingInfoCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Image(systemName: vpnManager.signingType.supportsSystemVPN ? "checkmark.seal.fill" : "exclamationmark.triangle")
-                    .foregroundStyle(vpnManager.signingType.supportsSystemVPN ? .green : .orange)
+                Image(systemName: vpnManager.signingType.supportsSystemVPN
+                      ? "checkmark.seal.fill"
+                      : "exclamationmark.triangle")
+                    .foregroundStyle(vpnManager.signingType.supportsSystemVPN ? Color.green : Color.orange)
+
                 Text(vpnManager.signingType.supportsSystemVPN
-                     ? "Системный VPN активен"
+                     ? "Системный VPN доступен"
                      : "Бесплатная подпись — внутрипроцессный режим")
                     .font(.headline)
                 Spacer()
@@ -70,8 +66,6 @@ struct HomeView: View {
         )
     }
 
-    // MARK: - Карточка монитора трафика
-
     private var trafficMonitorCard: some View {
         VStack(spacing: 16) {
             HStack {
@@ -80,7 +74,7 @@ struct HomeView: View {
                 Spacer()
                 Text(trafficMonitor.isMonitoring ? "Активно" : "Остановлено")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(trafficMonitor.isMonitoring ? .green : .secondary)
+                    .foregroundStyle(trafficMonitor.isMonitoring ? Color.green : Color.secondary)
             }
 
             HStack(spacing: 20) {
@@ -105,11 +99,10 @@ struct HomeView: View {
             }
             .padding(.vertical, 4)
 
-            // Сессия
             HStack {
                 Image(systemName: "clock")
                     .foregroundStyle(.secondary)
-                Text("Сессия: \(formatDuration(trafficMonitor.stats.sessionDuration))")
+                Text("Сессия: \(trafficMonitor.stats.durationFormatted)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -125,8 +118,6 @@ struct HomeView: View {
                 )
         )
     }
-
-    // MARK: - Кнопка VPN
 
     private var vpnButton: some View {
         Button {
@@ -144,20 +135,13 @@ struct HomeView: View {
             .frame(height: 64)
             .background(
                 ZStack {
-                    if vpnManager.status == .connected {
-                        LinearGradient(
-                            colors: [Color.red, Color.red.opacity(0.8)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    } else {
-                        LinearGradient(
-                            colors: [Color.blue, Color.blue.opacity(0.85)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    }
-
+                    LinearGradient(
+                        colors: vpnManager.status == .connected
+                            ? [Color.red, Color.red.opacity(0.8)]
+                            : [Color.blue, Color.blue.opacity(0.85)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
                     LinearGradient(
                         colors: [Color.white.opacity(0.35), Color.white.opacity(0.05)],
                         startPoint: .topLeading,
@@ -176,11 +160,15 @@ struct HomeView: View {
                 x: 0,
                 y: 8
             )
-            .scaleEffect(vpnManager.status == .connecting || vpnManager.status == .disconnecting ? 0.97 : 1.0)
-            .opacity(vpnManager.status == .connecting || vpnManager.status == .disconnecting ? 0.85 : 1.0)
+            .scaleEffect(isBusy ? 0.97 : 1.0)
+            .opacity(isBusy ? 0.85 : 1.0)
         }
         .buttonStyle(.plain)
-        .disabled(vpnManager.status == .connecting || vpnManager.status == .disconnecting)
+        .disabled(isBusy)
+    }
+
+    private var isBusy: Bool {
+        vpnManager.status == .connecting || vpnManager.status == .disconnecting
     }
 
     private var buttonTitle: String {
@@ -201,12 +189,6 @@ struct HomeView: View {
             vpnManager.connect(config: configManager.currentConfig)
             trafficMonitor.startMonitoring()
         }
-    }
-
-    private func formatDuration(_ interval: TimeInterval) -> String {
-        let minutes = Int(interval) / 60
-        let seconds = Int(interval) % 60
-        return String(format: "%02d:%02d", minutes, seconds)
     }
 }
 
@@ -243,4 +225,5 @@ private struct TrafficStatView: View {
     HomeView()
         .environmentObject(VPNManager())
         .environmentObject(TrafficMonitor())
+        .environmentObject(ConfigManager())
 }

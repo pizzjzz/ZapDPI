@@ -1,0 +1,44 @@
+name: Validate
+
+# Реальная сборка ZapDPI выполняется локально через `xtool dev`
+# (нужны Xcode.xip, Apple ID и подключённый iPhone).
+# CI проверяет, что манифест пакета и конфигурация xtool корректны.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Validate package and configuration
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Swift version
+        run: swift --version
+
+      - name: Validate Package.swift
+        run: swift package dump-package > /dev/null
+
+      - name: Validate plists
+        run: plutil -lint Support/Info.plist Support/ZapDPI.entitlements
+
+      - name: Validate xtool.yml
+        run: |
+          ruby -ryaml -e '
+            cfg = YAML.load_file("xtool.yml")
+            abort("xtool.yml: version must be 1") unless cfg["version"] == 1
+            abort("xtool.yml: bundleID is required") if cfg["bundleID"].to_s.empty?
+            %w[infoPath entitlementsPath].each do |key|
+              path = cfg[key]
+              abort("xtool.yml: #{key} points to missing file #{path}") if path && !File.exist?(path)
+            end
+            puts "xtool.yml OK"
+          '
+
+      - name: Check source layout
+        run: test -d Sources/ZapDPI && ls Sources/ZapDPI

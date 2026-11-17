@@ -4,12 +4,9 @@ struct SettingsView: View {
     @EnvironmentObject var configManager: ConfigManager
     @EnvironmentObject var vpnManager: VPNManager
 
-    @State private var showLogLevelPicker = false
-
     var body: some View {
         NavigationStack {
             Form {
-                // MARK: - Маршрутизация
                 Section {
                     Toggle("Включить маршрутизацию", isOn: Binding(
                         get: { !configManager.currentConfig.routes.isEmpty },
@@ -42,7 +39,6 @@ struct SettingsView: View {
                     Text("Маршрутизация")
                 }
 
-                // MARK: - DNS
                 Section {
                     Picker("DNS-сервер", selection: $configManager.currentConfig.dns) {
                         ForEach(DNSOption.allCases) { option in
@@ -53,7 +49,11 @@ struct SettingsView: View {
                     if configManager.currentConfig.dns == .custom {
                         TextField("Адреса DNS (через запятую)", text: Binding(
                             get: { configManager.currentConfig.customDNSServers.joined(separator: ", ") },
-                            set: { configManager.currentConfig.customDNSServers = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) } }
+                            set: {
+                                configManager.currentConfig.customDNSServers = $0
+                                    .split(separator: ",")
+                                    .map { $0.trimmingCharacters(in: .whitespaces) }
+                            }
                         ))
                     }
                 } header: {
@@ -64,7 +64,6 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                // MARK: - Расширенные настройки
                 Section {
                     Picker("Уровень логов", selection: $configManager.currentConfig.logLevel) {
                         ForEach(AppConfig.LogLevel.allCases, id: \.self) { level in
@@ -83,12 +82,11 @@ struct SettingsView: View {
                     Text("Расширенные настройки")
                 }
 
-                // MARK: - Управление конфигами
                 Section {
                     ForEach(configManager.configs) { saved in
                         HStack {
                             Image(systemName: saved.isCurrent ? "checkmark.circle.fill" : "circle")
-                                .foregroundStyle(saved.isCurrent ? .blue : .secondary)
+                                .foregroundStyle(saved.isCurrent ? Color.blue : Color.secondary)
                             Text(saved.name)
                                 .foregroundStyle(.primary)
                             Spacer()
@@ -100,12 +98,12 @@ struct SettingsView: View {
                         }
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            try? configManager.loadConfig(saved)
+                            configManager.loadConfig(saved)
                         }
                     }
                     .onDelete { indexSet in
                         indexSet.forEach { index in
-                            try? configManager.deleteConfig(configManager.configs[index])
+                            configManager.deleteConfig(configManager.configs[index])
                         }
                     }
                 } header: {
@@ -119,7 +117,6 @@ struct SettingsView: View {
     }
 }
 
-/// Диагностика
 struct DiagnosticsView: View {
     @EnvironmentObject var vpnManager: VPNManager
 
@@ -168,7 +165,6 @@ struct DiagnosticsView: View {
     }
 }
 
-/// О приложении
 struct AboutView: View {
     var body: some View {
         List {
@@ -186,9 +182,9 @@ struct AboutView: View {
                         .foregroundStyle(.secondary)
                 }
                 HStack {
-                    Text("Дизайн")
+                    Text("Сборка")
                     Spacer()
-                    Text("Liquid Glass (iOS 18)")
+                    Text("SwiftPM + xtool")
                         .foregroundStyle(.secondary)
                 }
             }
@@ -196,7 +192,7 @@ struct AboutView: View {
             Section {
                 Link("Политика конфиденциальности", destination: URL(string: "https://zapdpi.app/privacy")!)
                 Link("Условия использования", destination: URL(string: "https://zapdpi.app/terms")!)
-                Link("GitHub репозиторий", destination: URL(string: "https://github.com/zapdpi/zapdpi-ios")!)
+                Link("GitHub репозиторий", destination: URL(string: "https://github.com/pizzjzz/ZapDPI")!)
             }
 
             Section {
