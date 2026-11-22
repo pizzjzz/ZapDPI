@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject var configManager: ConfigManager
     @EnvironmentObject var vpnManager: VPNManager
+    @EnvironmentObject var coreUpdater: CoreUpdater
 
     var body: some View {
         NavigationStack {
@@ -83,6 +84,22 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    NavigationLink {
+                        CoreUpdateView()
+                    } label: {
+                        HStack {
+                            Label("Ядро sing-box", systemImage: "shippingbox.fill")
+                            Spacer()
+                            Text(coreBadge)
+                                .font(.caption)
+                                .foregroundStyle(coreBadgeColor)
+                        }
+                    }
+                } header: {
+                    Text("Обновления")
+                }
+
+                Section {
                     ForEach(configManager.configs) { saved in
                         HStack {
                             Image(systemName: saved.isCurrent ? "checkmark.circle.fill" : "circle")
@@ -113,6 +130,30 @@ struct SettingsView: View {
             .scrollContentBackground(.hidden)
             .background(Color.appBackground)
             .navigationTitle("Настройки")
+        }
+    }
+
+    private var coreBadge: String {
+        switch coreUpdater.coreState {
+        case .checking:
+            return "проверка…"
+        case .updateAvailable:
+            return coreUpdater.latestRelease?.tagName ?? "обновление"
+        case .failed:
+            return "ошибка"
+        case .upToDate, .idle:
+            return coreUpdater.geoManifest == nil
+                ? CoreInfo.bundledVersion
+                : "\(CoreInfo.bundledVersion) + geo"
+        }
+    }
+
+    private var coreBadgeColor: Color {
+        switch coreUpdater.coreState {
+        case .updateAvailable: return .orange
+        case .failed: return .red
+        case .upToDate: return .green
+        case .checking, .idle: return .secondary
         }
     }
 }
@@ -209,4 +250,5 @@ struct AboutView: View {
     SettingsView()
         .environmentObject(ConfigManager())
         .environmentObject(VPNManager())
+        .environmentObject(CoreUpdater.shared)
 }

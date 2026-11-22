@@ -34,6 +34,12 @@ final class VPNManager: ObservableObject {
         logs.log(.info, .app, "connect requested · mode=\(config.tunnelMode.rawValue) · dpi=\(config.dpiBypassMode.rawValue)")
         logs.log(.info, .core, "starting sing-box 1.12.0 (go1.24.4, ios/arm64)")
         logs.log(.debug, .config, "loading config · ipv6=\(config.ipv6Enabled) · dns=\(config.dns.rawValue) · log=\(config.logLevel.rawValue)")
+
+        if let geo = GeoManifest.load() {
+            logs.log(.debug, .config, "geo assets: \(geo.siteVersion) · geosite \(geo.siteSHA256.prefix(12))…")
+        } else {
+            logs.log(.debug, .config, "geo assets: built-in")
+        }
         logs.log(.info, .dns, "dns: initialized · servers=\(dnsServers(for: config))")
         logs.log(.info, .tun, "inbound/tun[tun-in]: started at 172.19.0.1/30")
         logs.log(.info, .outbound, "outbound/direct[direct]: started")

@@ -33,6 +33,9 @@ struct ContentView: View {
         .onChange(of: selectedTab) { _, _ in
             UIImpactFeedbackGenerator(style: .soft).impactOccurred()
         }
+        .task {
+            await CoreUpdater.shared.autoCheckIfNeeded()
+        }
     }
 }
 
@@ -73,4 +76,5 @@ extension Color {
         .environmentObject(TrafficMonitor())
         .environmentObject(ConfigManager())
         .environmentObject(LogStore.shared)
+        .environmentObject(CoreUpdater.shared)
 }

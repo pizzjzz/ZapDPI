@@ -14,6 +14,7 @@ struct ZapDPIApp: App {
                 .environmentObject(trafficMonitor)
                 .environmentObject(configManager)
                 .environmentObject(logStore)
+                .environmentObject(CoreUpdater.shared)
         }
     }
 }
