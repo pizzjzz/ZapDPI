@@ -21,7 +21,6 @@ struct HomeView: View {
                     }
                     .padding(.top, 16)
 
-                    signingInfoCard
                     trafficMonitorCard
 
                     Spacer(minLength: 20)
@@ -32,38 +31,6 @@ struct HomeView: View {
                 .padding(.horizontal, 20)
             }
         }
-    }
-
-    private var signingInfoCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Image(systemName: vpnManager.signingType.supportsSystemVPN
-                      ? "checkmark.seal.fill"
-                      : "exclamationmark.triangle")
-                    .foregroundStyle(vpnManager.signingType.supportsSystemVPN ? Color.green : Color.orange)
-
-                Text(vpnManager.signingType.supportsSystemVPN
-                     ? "Системный VPN доступен"
-                     : "Бесплатная подпись — внутрипроцессный режим")
-                    .font(.headline)
-                Spacer()
-            }
-
-            Text(vpnManager.signingType.supportsSystemVPN
-                 ? "Используется NEPacketTunnelProvider (полный системный туннель)."
-                 : "NetworkExtension недоступен. Приложение работает в локальном режиме In-App Tun/Proxy без системного VPN.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                )
-        )
     }
 
     private var trafficMonitorCard: some View {
